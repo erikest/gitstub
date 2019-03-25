@@ -3,7 +3,7 @@
 This dotnet cli extension automates the creation of a github repository, a new dotnet project/solution and a local git repository remoted to github.
 
 #### Installation 
-1. publish for your platform (exa: dotnet publish -c Release -r Win10-x65)
+1. publish for your platform (exa: dotnet publish -c Release -r Win10-x64)
 2. place the resulting executable (on *nix make sure to chmod +x to make it executable), which should be named dotnet-gitstub, in whichever folder you choose
 3. modify your PATH environment variable to include the location of dotnet-gitstub, because the dotnet CLI searches the PATH for executables with the naming convention dotnet-subcommand 
 
