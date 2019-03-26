@@ -15,7 +15,7 @@ The gitstub command takes several parameters:
 - **-gsd** - the description for the github repository
 - **-gss** - the name of the solution.  This is **optional**.  If it is included, the github repository will be named after the solution.  See below for more info
 - **-gsa** - repository access, defaults to private, use 'pub' for public repos. **optional**
-- all other parameters are passed on to **dotnet new**, for clarity, it is best to put these arguments immediately after **dotnet gitstub**, exa: **dotnet gitstub webapp &lt;other parameters&gt;**
+- all other parameters are passed on to **dotnet new**. For clarity, it is best to put these arguments immediately after **dotnet gitstub**, exa: **dotnet gitstub webapp &lt;other parameters&gt;**
 
 #### Solutions and Projects  
 If you specify just a *project name* with **-gsr**, the tool will create the project in the current directory:
