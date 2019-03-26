@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Runtime.Serialization.Json;
 
 
 //Thank you: https://blog.maartenballiauw.be/post/2017/04/10/extending-dotnet-cli-with-custom-tools.html, for clarity on CLI extensions
@@ -75,7 +77,6 @@ namespace gitstub
 
         private static void InitializeLocalRepository(string user, string auth, string repoName)
         {
-
             //Initialize the local git repo
             var gitArgs = "init";
             RunGit(gitArgs);
@@ -87,7 +88,6 @@ namespace gitstub
         private static void CreateGitHubRepository(string user, string pass, string project, string solution, string desc, string accessPrivate, out string auth, out string repoName)
         {
             ////    This can be extended to provide more parameters to creation, in addition to name and description
-            ////    This can be extended to parse the response in case of error, for example, if the repo already exists.
 
             //Thank you: https://stackoverflow.com/questions/2423777/is-it-possible-to-create-a-remote-repo-on-github-from-the-cli-without-opening-br
             var gitHubApiUrl = "https://api.github.com/user/repos";
@@ -100,23 +100,49 @@ namespace gitstub
             {
                 try
                 {
+                    HttpResponseMessage response = CreateGitHubRepository(user, project, auth, gitHubApiUrl, apiContent, client);
 
-                    //Thank you: https://stackoverflow.com/questions/50732772/best-curl-u-equivalence-in-c-sharp
-                    client.DefaultRequestHeaders.Add("Authorization", "Basic " + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(auth)));
-                    //Thank you: https://stackoverflow.com/questions/39907742/github-api-is-responding-with-a-403-when-using-requests-request-function
-                    client.DefaultRequestHeaders.Add("User-Agent", $"{user}/{project}");
-
-                    var response = client.PostAsync(gitHubApiUrl, apiContent).Result;
-                    if (response.StatusCode == System.Net.HttpStatusCode.Created) //SUCCESS!! If only it was so easy in the rest of your life...
-                        Console.WriteLine($"GitHub Repository Created: https://github.com/{user}/{repoName}");
-
-                    //TODO check the response for problems
-                    //Left as an exercise to the forker...
+                    ProcessGitHubAPIResponse(user, repoName, response);
                 }
                 catch (HttpRequestException reqEx)
                 {
-                    //TODO: be better at everything, including exception handling, but do that part last, because hubris.
+                    Console.WriteLine($"HttpRequestException while trying to create the repository on GitHub.  The exception says: {reqEx.Message}");
                 }
+            }
+        }
+
+        private static HttpResponseMessage CreateGitHubRepository(string user, string project, string auth, string gitHubApiUrl, StringContent apiContent, HttpClient client)
+        {
+            //Thank you: https://stackoverflow.com/questions/50732772/best-curl-u-equivalence-in-c-sharp
+            client.DefaultRequestHeaders.Add("Authorization", "Basic " + System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(auth)));
+            //Thank you: https://stackoverflow.com/questions/39907742/github-api-is-responding-with-a-403-when-using-requests-request-function
+            client.DefaultRequestHeaders.Add("User-Agent", $"{user}/{project}");
+
+            var response = client.PostAsync(gitHubApiUrl, apiContent).Result; 
+            return response;
+        }
+
+        private static void ProcessGitHubAPIResponse(string user, string repoName, HttpResponseMessage response)
+        {
+            (string code, string msg) err = (null, null);
+            switch (response.StatusCode)
+            {
+                case HttpStatusCode.Created: //SUCCESS!! If only it was so easy in the rest of your life...
+                    Console.WriteLine($"GitHub Repository Created: https://github.com/{user}/{repoName}"); break;
+                case HttpStatusCode.NotFound:
+                    err = ("404", "Not Found.  In this context, it probably means a problem with your username or password"); break;
+                case HttpStatusCode.Forbidden:
+                    err = ("403", "Forbidden.  Too many failed login attempts"); break;
+                case HttpStatusCode.Unauthorized:
+                    err = ("401", "Unauthorized. Check username and password"); break;
+                default:
+                    err = (response.StatusCode.ToString(), "Not sure what happened here..."); break;
+            }
+
+            if (err.code != null)
+            {
+                Console.WriteLine($"GitHub API Error, returned ({err.code}) while trying to create the repository. {err.msg}");
+                Environment.Exit(2);
             }
         }
 
@@ -130,6 +156,31 @@ namespace gitstub
             desc = "";
             accessPrivate = "true";
             dotnetNewArgs = new List<string>();
+
+            ProcessArgsArray(args, ref user, ref pass, ref project, ref solution, ref desc, ref accessPrivate, dotnetNewArgs);
+
+            ValidateParameters(user, pass, project);
+        }
+
+        private static void ValidateParameters(string user, string pass, string project)
+        {
+            List<(string field, string param)> errs = new List<(string, string)>();
+            if (string.IsNullOrWhiteSpace(user))
+                errs.Add(("your GitHub username", "-gsa <username>"));
+            if (string.IsNullOrWhiteSpace(pass))
+                errs.Add(("your GitHub password", "-gsp <password>"));
+            if (string.IsNullOrWhiteSpace(project))
+                errs.Add(("the Repository/Project to create", "-gsr <repository>"));
+
+            if (errs.Count > 0)
+            {
+                errs.ForEach(err => Console.WriteLine($"Error: missing parameter, need {err.field}, please specify it with {err.param}"));
+                Environment.Exit(1);
+            }
+        }
+
+        private static void ProcessArgsArray(string[] args, ref string user, ref string pass, ref string project, ref string solution, ref string desc, ref string accessPrivate, List<string> dotnetNewArgs)
+        {
             try
             {
                 for (int i = 0; i < args.Length; i++)
@@ -155,12 +206,10 @@ namespace gitstub
             }
             catch (IndexOutOfRangeException outofRange)
             {
-                Console.WriteLine("bork: Invalid Parameters.  It's not you baby, it's just the params.");
+                Console.WriteLine("Error: Invalid Parameters.  It's not you baby, it's just the params.");
             }
-
-            //TODO throw nasty exceptions if the args aren't filled in.  Make 'em pay.
         }
-               
+
         //These should probably monitor the std or err out and do nice, gentle things when git gets rough.
         private static void RunGit(string gitArgs)
         {
@@ -173,22 +222,21 @@ namespace gitstub
 
         private static void RunDotnetNew(string args, string workDirectory=null)
         {
-            using (var gitProc = new Process() { StartInfo = new ProcessStartInfo("dotnet", "new " + args) { WorkingDirectory =Directory.GetCurrentDirectory() +  workDirectory } })
+            using (var dotnetProc = new Process() { StartInfo = new ProcessStartInfo("dotnet", "new " + args) { WorkingDirectory =Directory.GetCurrentDirectory() +  workDirectory } })
             {
-                gitProc.Start();
-                gitProc.WaitForExit();
+                dotnetProc.Start();
+                dotnetProc.WaitForExit();
             }
         }
 
         private static void RunDotnetSln(string args)
         {
-            using (var gitProc = new Process() { StartInfo = new ProcessStartInfo("dotnet", "sln " + args) })
+            using (var dotnetProc = new Process() { StartInfo = new ProcessStartInfo("dotnet", "sln " + args) })
             {
-                gitProc.Start();
-                gitProc.WaitForExit();
+                dotnetProc.Start();
+                dotnetProc.WaitForExit();
             }
         }
-
 
         //Help me Hanselman: You found a sweet 5k .gitignore file on the 3/5/19 standup... where's that again?  Explain it to me like I'm a 5 year old.
         static string gitIgnores()
