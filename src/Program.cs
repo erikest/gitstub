@@ -20,12 +20,13 @@ namespace gitstub
         /// <param name="args">
         /// -gsu GitHub username
         /// -gsp GitHub password
-        /// -gsr repository/project name to create
-        /// -gss solution/repository name [OPTIONAL]
+        /// -gsr repository/project name to create, default to current directory name [OPTIONAL]
+        /// -gss solution/repository name, creates a solution and folder stucture for the project [OPTIONAL]
         /// -gsd description of new project [OPTIONAL]
         /// -gsa access, pub for public, private otherwise [OPTIONAL]
         /// -gsc commit message [OPTIONAL]
         /// --existing, use the existing solution/project in the current working directory, instead of creating a new project/solution.  Note: this will still add .gitignore [OPTIONAL]
+        /// --sln, create a solution as well as a project.  Use this when you want to use the current directory name for a solution and project name. [OPTIONAL]
         /// </param>
         static void Main(string[] args)
         {
@@ -56,7 +57,7 @@ namespace gitstub
         {
             if (!project.UseExisting)
             {
-                if (!string.IsNullOrWhiteSpace(project.Solution)) //if solution was specified, make a simple structure
+                if (project.UseSolution) //if solution was specified, make a simple structure
                 {
                     //Create the folder structure =>src/Proj/
                     var projSubDir = $"src\\{project.Project}";
@@ -162,9 +163,7 @@ namespace gitstub
             if (string.IsNullOrWhiteSpace(project.User))
                 errs.Add(("your GitHub username", "-gsa <username>"));
             if (string.IsNullOrWhiteSpace(project.Pass))
-                errs.Add(("your GitHub password", "-gsp <password>"));
-            if (string.IsNullOrWhiteSpace(project.Project))
-                errs.Add(("the Repository/Project to create", "-gsr <repository>"));
+                errs.Add(("your GitHub password", "-gsp <password>"));            
 
             if (errs.Count > 0)
             {
@@ -189,7 +188,9 @@ namespace gitstub
                         case "-gsr":
                             project.Project = args[++i]; break;
                         case "-gss":
-                            project.Solution = args[++i]; break;
+                            project.Solution = args[++i];
+                            project.UseSolution = true;
+                            break;
                         case "-gsd":
                             project.Desc = args[++i]; break;
                         case "-gsc":
@@ -198,6 +199,8 @@ namespace gitstub
                             project.AccessPrivate = args[++i].ToLower() == "pub" ? "false" : "true"; break;
                         case "--existing":
                             project.UseExisting = true; break;
+                        case "--sln":
+                            project.UseSolution = true;break;
                         default:
                             project.NewArgs.Add(args[i]); break;
                     }
@@ -288,12 +291,13 @@ msbuild.wrn
     {
         public string User { get; set; }
         public string Pass { get; set; }
-        public string Project { get; set; }
-        public string Solution { get; set; }
+        public string Project { get; set; } = Path.GetFileName(Directory.GetCurrentDirectory());
+        public string Solution { get; set; } = Path.GetFileName(Directory.GetCurrentDirectory());
         public string Desc { get; set; }
         public string CommitMessage { get; set; } = "GitStub => Project Initialization!";
         public string AccessPrivate { get; set; }
         public bool UseExisting { get; set; }
+        public bool UseSolution { get; set; }
         public List<string> NewArgs { get; set; } = new List<string>();
 
         public string Auth => $"{User}:{Pass}";

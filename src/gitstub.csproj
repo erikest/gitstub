@@ -5,6 +5,19 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <AssemblyName>dotnet-gitstub</AssemblyName>
     <StartupObject>gitstub.Program</StartupObject>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>gitstub</ToolCommandName>
+    <Authors>Erik Taylor</Authors>
+    <Company />
+    <Description>Dotnet cli extension and global tool to quickly create a GitHub repository from a new or existing project, then add the files, commit and push to GitHub.  Boom - You're ready to iterate!</Description>
+    <RepositoryUrl>https://github.com/erikest/gitstub</RepositoryUrl>
+    <PackageId>gitstub</PackageId>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <Version>1.0.3</Version>
+    <Product>gitstub</Product>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>2019 Erik Taylor</Copyright>
+    <PackageProjectUrl>https://github.com/erikest/gitstub</PackageProjectUrl>
   </PropertyGroup>
 
 </Project>
