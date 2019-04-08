@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Runtime.Serialization.Json;
 using System.Security;
 
@@ -72,8 +73,9 @@ namespace gitstub
         }
 
         private static void ShowHelp()
-        { 
-            var lines = File.ReadAllLines("Help.txt");
+        {
+            Console.WriteLine("Getting ready...");
+            var lines = File.ReadAllLines($"{System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)}\\Help.txt");
             foreach (string line in lines)
                 Console.WriteLine(line);
         }

@@ -12,7 +12,7 @@ Options:
  --existing	use the existing solution/project in the current working directory, instead of creating a new project/solution.  Note: this will still add .gitignore.  Also note, this overrides -gsr, -gss and --sln, so don't use them together optional
  --sln		create a solution as well as a project.  Use this when you want to use the current directory name for a solution and project name. optional
 
-all other parameters are passed on to dotnet new. For clarity, it is best to put these arguments immediately after gitstub, exa: gitstub webapp &lt;other parameters&gt;
+all other parameters are passed on to dotnet new, unless --existing is specified, in which case they are ignored. For clarity, it is best to put these arguments immediately after gitstub, exa: gitstub webapp &lt;other parameters&gt;
 
 Solutions and Projects  
 ======================

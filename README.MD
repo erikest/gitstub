@@ -22,8 +22,8 @@ The tool is then available by directly calling *gitstub*, you don't need to use 
 The gitstub command takes several parameters:
 - **-gsu** - your github username
 - **-gsp** - your github password 
-- **-gsr** - the name of the github repo to create, which is also used as the name for the dotnet project that is created
-- **-gsd** - the description for the github repository
+- **-gsr** - the name of the github repo to create, which is also used as the name for the dotnet project that is created **optional**
+- **-gsd** - the description for the github repository **optional**
 - **-gss** - the name of the solution.  This is **optional**.  If it is included, the github repository will be named after the solution.  See below for more info
 - **-gsa** - repository access, defaults to private, use 'pub' for public repos. **optional**
 - **-gsc** - commit message **optional**
