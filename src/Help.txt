@@ -1,0 +1,43 @@
+Usage: gitstub [options]
+
+Options:
+ -h		Displays help for this command.
+ -gsu		GitHub username [required]
+ -gsp		GitHub password [required]
+ -gsr		the name of the github repo to create, which is also used as the name for the dotnet project that is created
+ -gsd		the description for the github repository
+ -gss		the name of the solution.  If included, the github repository will be named after the solution.  See below for more info
+ -gsa		repository access, defaults to private, use 'pub' for public repos. optional
+ -gsc		commit message optional
+ --existing	use the existing solution/project in the current working directory, instead of creating a new project/solution.  Note: this will still add .gitignore.  Also note, this overrides -gsr, -gss and --sln, so don't use them together optional
+ --sln		create a solution as well as a project.  Use this when you want to use the current directory name for a solution and project name. optional
+
+all other parameters are passed on to dotnet new. For clarity, it is best to put these arguments immediately after gitstub, exa: gitstub webapp &lt;other parameters&gt;
+
+Solutions and Projects  
+======================
+If you specify just a project name with -gsr, the tool will create the project in the current directory:
+- <project name>.csproj
+- <project files>
+
+If you specify a solution name with -gss, the tool will create a simple solution/project structure:  
+- <solution name>.sln
+- src/
+    - <project name>/
+        - <project name>.csproj 
+        - <project files>...
+		
+If you don't specify a project name, the current directory will be used
+If you don't specify a soluton name, but add the --sln flag, a solution will made from the current directory
+ 
+Examples
+========
+
+CLI Extension
+- dotnet gitstub console -gsu gunnarbfamoz -gsp herddatsheep -gsr ConsoleAppFTW 
+- dotnet gitstub webapp -gsu gnottareelname -gsp cantguessme -gsr DemoWebAppOfAwesomeness -gss MotherOfAllDemoSolutions -gsd "This demonstrates the awesome power of gitstub! no? okay.. the modest power of gitstub! .. .. hmm, then perhaps the marginal utility of gitstub?"
+
+Global Tool
+- gitstub webapp --sln -gsu quickstubmcgee -gsp fasteststubinthewest
+- gitstub grpc -gsu mrclientserver -gsp fasterthanjson -gsr CoolNewClientServerProject -gss CoolNewClientServerSolution -gsd "Testing the new gRPC awesomeness" -gsc "Nothing as pure as the first commit"
+- gitstub --existing -gsu diffthedude -gsp tiedtheroomtogether

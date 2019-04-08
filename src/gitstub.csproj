@@ -20,4 +20,10 @@
     <PackageProjectUrl>https://github.com/erikest/gitstub</PackageProjectUrl>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Update="help.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -30,6 +30,9 @@ namespace gitstub
         /// </param>
         static void Main(string[] args)
         {
+            //0: Help
+            CheckForHelp(args);
+
             //1: Parse Args            
             var project = ParseArguments(args);
 
@@ -44,6 +47,35 @@ namespace gitstub
 
             //5:  Add, Commit, Push - ohhh, feel the power!
             AddCommitPush(project);
+        }
+
+        private static void CheckForHelp(string[] args)
+        {
+            bool showHelp = false;
+            if (args.Length == 0)
+                showHelp = true;
+            else
+                foreach(string arg in args)
+                {
+                    if (arg == "-h")
+                    {
+                        showHelp = true;
+                        break;
+                    }
+                }
+
+            if (showHelp)
+            {
+                ShowHelp();
+                System.Environment.Exit(0);
+            }
+        }
+
+        private static void ShowHelp()
+        { 
+            var lines = File.ReadAllLines("Help.txt");
+            foreach (string line in lines)
+                Console.WriteLine(line);
         }
 
         private static void AddCommitPush(GitStubProject project)
