@@ -246,6 +246,10 @@ namespace gitstub
                 Environment.Exit(2);
             }
 
+#if DEBUG
+            Console.WriteLine(project.ToString());
+#endif
+
             return project;
         }
 
@@ -336,6 +340,12 @@ msbuild.wrn
 
         public string Auth => $"{User}:{Pass}";
 
-        public string RepoName => Solution ?? Project;
+        public string RepoName => UseSolution ? Solution : Project;
+
+        public override string ToString()
+        {
+            return $"User: {User}, Pass: {Pass}, Project: {Project}, Solution: {Solution}, Desc: {Desc}, Commit: {CommitMessage}, Access: {AccessPrivate}," +
+                $"UseExisting: {UseExisting}, UseSolution: {UseSolution}, RepoName: {RepoName}";
+        }
     }
 }
