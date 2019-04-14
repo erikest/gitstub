@@ -24,29 +24,33 @@ namespace gitstub
         /// -gsr repository/project name to create, default to current directory name [OPTIONAL]
         /// -gss solution/repository name, creates a solution and folder stucture for the project [OPTIONAL]
         /// -gsd description of new project [OPTIONAL]
-        /// -gsa access, pub for public, private otherwise [OPTIONAL]
+        /// --private, private repository [OPTIONAL]
         /// -gsc commit message [OPTIONAL]
         /// --existing, use the existing solution/project in the current working directory, instead of creating a new project/solution.  Note: this will still add .gitignore [OPTIONAL]
         /// --sln, create a solution as well as a project.  Use this when you want to use the current directory name for a solution and project name. [OPTIONAL]
         /// </param>
         static void Main(string[] args)
         {
+#if DEBUG
+            args = new string[] { "-gsu", "erikest", "-gsp", "sparklee4dymonds", "console", "-gsr", "testgitstub1.0.6", "--private" };
+#endif
+
             //0: Help
             CheckForHelp(args);
 
             //1: Parse Args            
             var project = ParseArguments(args);
 
-            //2:  Make API Call to create the github repository            
-            CreateGitHubRepository(project);
-
-            //3:  Run Git Commands - Let's get ready
-            InitializeLocalRepository(project);
-
-            //4:  Create new project - To Rumble!
+            //2:  Create new project
             CreateProjectStructure(project);
 
-            //5:  Add, Commit, Push - ohhh, feel the power!
+            //3:  Run Git Commands
+            InitializeLocalRepository(project);
+
+            //4:  Make API Call to create the Github repository
+            CreateGitHubRepository(project);
+
+            //5:  Add, Commit, Push to Github
             AddCommitPush(project);
         }
 
@@ -82,8 +86,11 @@ namespace gitstub
 
         private static void AddCommitPush(GitStubProject project)
         {
+            Console.WriteLine("**Add Files**");            
             RunGit("add -A"); //Add all the files in the directory
+            Console.WriteLine($"**Commit Local : {project.CommitMessage}**");
             RunGit($"commit -m \"{project.CommitMessage}\"");
+            Console.WriteLine("**Push to Github**");
             RunGit("push --set-upstream origin master");
         }
 
@@ -91,23 +98,30 @@ namespace gitstub
         {
             if (!project.UseExisting)
             {
+                Console.WriteLine("**Create Project Structure**");
                 if (project.UseSolution) //if solution was specified, make a simple structure
                 {
+                    Console.WriteLine($"****Use Solution: {project.Solution}");
                     //Create the folder structure =>src/Proj/
                     var projSubDir = $"src\\{project.Project}";
                     Directory.CreateDirectory(projSubDir);
                     RunDotnetNew($"sln -n {project.Solution}"); //Create the solution file
 
                     //Create the project in src/project
+                    Console.WriteLine($"****Create Project in src/: {project.Project}");
                     RunDotnetNew(string.Join(" ", project.NewArgs), $"\\{projSubDir}");
                     RunDotnetSln($"add {projSubDir}"); //Add the new project to the solution
 
                     //TODO add tests/testProject and any other structure scaffolding
                 }
                 else
+                {
+                    Console.WriteLine($"****Create Project: {project.Project}");
                     RunDotnetNew(string.Join(" ", project.NewArgs));
+                }
             }
 
+            Console.WriteLine("****Add .gitignore");
             //Add .gitignore
             //Thank you: https://github.com/dotnet/core/blob/master/.gitignore
             File.WriteAllText(".gitignore", gitIgnores(), System.Text.Encoding.ASCII);
@@ -115,24 +129,28 @@ namespace gitstub
 
         private static void InitializeLocalRepository(GitStubProject project)
         {
+            Console.WriteLine("**Git Init**");
             //Initialize the local git repo
             var gitArgs = "init";
             RunGit(gitArgs);
 
+            Console.WriteLine("****Remote add origin");
             //Point the repository to github location
             RunGit($"remote add origin https://{project.Auth}@github.com/{project.User}/{project.RepoName}.git");
         }
 
         private static void CreateGitHubRepository(GitStubProject project)
         {
+            Console.WriteLine("**Create Github Repository**");
             ////    This can be extended to provide more parameters to creation, in addition to name and description
             //Thank you: https://stackoverflow.com/questions/18971510/how-do-i-set-up-httpcontent-for-my-httpclient-postasync-second-parameter
-            var apiValues = $"{{\"name\":\"{project.RepoName}\", \"description\":\"{project.Desc}\", \"private\":\"{project.AccessPrivate}\"}}";
+            var apiValues = $"{{\"name\":\"{project.RepoName}\", \"description\":\"{project.Desc}\"{(project.AccessPrivate ? $", \"private\":\"{project.AccessPrivate}\"": "")}}}";
             var apiContent = new StringContent(apiValues, System.Text.Encoding.UTF8, "application/json");
             using (var client = new HttpClient())
             {
                 try
                 {
+                    Console.WriteLine("****Post to Github API");
                     HttpResponseMessage response = CreateGitHubRepository(project, apiContent, client);
 
                     ProcessGitHubAPIResponse(project, response);
@@ -145,7 +163,7 @@ namespace gitstub
         }
 
         private static HttpResponseMessage CreateGitHubRepository(GitStubProject project, StringContent apiContent, HttpClient client)
-        {
+        {            
             //Thank you: https://stackoverflow.com/questions/2423777/is-it-possible-to-create-a-remote-repo-on-github-from-the-cli-without-opening-br
             var gitHubApiUrl = "https://api.github.com/user/repos";
             //Thank you: https://stackoverflow.com/questions/50732772/best-curl-u-equivalence-in-c-sharp
@@ -163,7 +181,7 @@ namespace gitstub
             switch (response.StatusCode)
             {
                 case HttpStatusCode.Created: //SUCCESS!! If only it was so easy in the rest of your life...
-                    Console.WriteLine($"GitHub Repository Created: https://github.com/{project.User}/{project.RepoName}"); break;
+                    Console.WriteLine($"****GitHub Repository Created: https://github.com/{project.User}/{project.RepoName}"); break;
                 case HttpStatusCode.NotFound:
                     err = ("404", "Not Found.  In this context, it probably means a problem with your username or password"); break;
                 case HttpStatusCode.Forbidden:
@@ -229,8 +247,8 @@ namespace gitstub
                             project.Desc = args[++i]; break;
                         case "-gsc":
                             project.CommitMessage = args[++i]; break;
-                        case "-gsa":
-                            project.AccessPrivate = args[++i].ToLower() == "pub" ? "false" : "true"; break;
+                        case "--private":
+                            project.AccessPrivate = true; break;
                         case "--existing":
                             project.UseExisting = true; break;
                         case "--sln":
@@ -320,7 +338,7 @@ msbuild.log
 msbuild.err
 msbuild.wrn
 
-# Visual Studio 2015
+# Visual Studio
 .vs / ";
         }
     }
@@ -333,15 +351,12 @@ msbuild.wrn
         public string Solution { get; set; } = Path.GetFileName(Directory.GetCurrentDirectory());
         public string Desc { get; set; }
         public string CommitMessage { get; set; } = "GitStub => Project Initialization!";
-        public string AccessPrivate { get; set; }
+        public bool AccessPrivate { get; set; }
         public bool UseExisting { get; set; }
         public bool UseSolution { get; set; }
         public List<string> NewArgs { get; set; } = new List<string>();
-
         public string Auth => $"{User}:{Pass}";
-
         public string RepoName => UseSolution ? Solution : Project;
-
         public override string ToString()
         {
             return $"User: {User}, Pass: {Pass}, Project: {Project}, Solution: {Solution}, Desc: {Desc}, Commit: {CommitMessage}, Access: {AccessPrivate}," +

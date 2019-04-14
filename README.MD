@@ -25,8 +25,8 @@ The gitstub command takes several parameters:
 - **-gsr** - the name of the github repo to create, which is also used as the name for the dotnet project that is created **optional**
 - **-gsd** - the description for the github repository **optional**
 - **-gss** - the name of the solution.  This is **optional**.  If it is included, the github repository will be named after the solution.  See below for more info
-- **-gsa** - repository access, defaults to private, use 'pub' for public repos. **optional**
 - **-gsc** - commit message **optional**
+- **--private** - for a private repository, public by default. **optional**
 - **--existing** - use the existing solution/project in the current working directory, instead of creating a new project/solution.  Note: this will still add .gitignore.  Also note, this overrides -gsr, -gss and --sln, so don't use them together **optional**
 - **--sln** - create a solution as well as a project.  Use this when you want to use the current directory name for a solution and project name. **optional**
 - all other parameters are passed on to **dotnet new**. For clarity, it is best to put these arguments immediately after **dotnet gitstub**, exa: **dotnet gitstub webapp &lt;other parameters&gt;**
@@ -53,7 +53,7 @@ If you don't specify a *soluton name*, but add the **--sln** flag, a solution wi
 - *dotnet gitstub* webapp **-gsu** gnottareelname **-gsp** cantguessme **-gsr** DemoWebAppOfAwesomeness **-gss** MotherOfAllDemoSolutions **-gsd** "*This demonstrates the awesome power of gitstub! no? okay.. the modest power of gitstub! .. .. hmm, then perhaps the marginal utility of gitstub?*"
 
 ##### Global Tool
-- *gitstub* webapp **--sln** **-gsu** quickstubmcgee **-gsp** fasteststubinthewest
+- *gitstub* webapp **--sln** **-gsu** quickstubmcgee **-gsp** fasteststubinthewest **--private**
 - *gitstub* grpc **-gsu** mrclientserver **-gsp** fasterthanjson **-gsr** CoolNewClientServerProject **-gss** CoolNewClientServerSolution **-gsd** "Testing the new gRPC awesomeness" **-gsc** "Nothing as pure as the first commit"
 - *gitstub* **--existing** **-gsu** diffthedude **-gsp** tiedtheroomtogether
 
