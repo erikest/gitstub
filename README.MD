@@ -4,6 +4,10 @@ This dotnet cli extension and/or global tool automates the creation of a github 
 
 #### Installation 
 
+##### As a Global Tool (easier)
+
+1. dotnet install --global gitstub
+
 ##### Manually Publish and Deploy
 
 1. publish for your platform (exa: dotnet publish -c Release -r Win10-x64)
@@ -11,12 +15,6 @@ This dotnet cli extension and/or global tool automates the creation of a github 
 3. modify your PATH environment variable to include the location of dotnet-gitstub, because the dotnet CLI searches the PATH for executables with the naming convention dotnet-subcommand 
 
 The tool is then available as a cli extension by calling *dotnet gitstub*
-
-##### As a Global Tool (easier)
-
-1. dotnet install --global gitstub
-
-The tool is then available by directly calling *gitstub*, you don't need to use *dotnet gitstub*
 
 #### Parameters
 The gitstub command takes several parameters:
